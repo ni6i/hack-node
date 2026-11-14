@@ -1,6 +1,5 @@
 (() => {
   const $ = (s) => document.querySelector(s);
-  let fileQueue = [];
   let repoConfig = JSON.parse(localStorage.getItem("gh_config") || "null");
 
   const modal = $("#modal"), tokenInput = $("#token-input"), repoInput = $("#repo-input");
@@ -9,14 +8,14 @@
 
   function checkAuth() {
     if (repoConfig && repoConfig.token && repoConfig.repo) {
-      authLevel.textContent = "ROOT";
+      authLevel.textContent = "管理员";
       authLevel.className = "blink";
       btnLogin.classList.add("hidden");
       btnLogout.classList.remove("hidden");
       uploadSection.classList.remove("hidden");
       repoInput.value = repoConfig.repo;
     } else {
-      authLevel.textContent = "GUEST";
+      authLevel.textContent = "访客";
       authLevel.className = "text-red";
       btnLogin.classList.remove("hidden");
       btnLogout.classList.add("hidden");
@@ -33,7 +32,7 @@
   $("#btn-submit").onclick = () => {
     const token = tokenInput.value.trim();
     const repo = repoInput.value.trim();
-    if (!token || !repo.includes("/")) return alert("[!] 格式错误：需输入 Token 及 Owner/Repo");
+    if (!token || !repo.includes("/")) return alert("[错误] 请填写正确的密钥和仓库名(如: ni6i/hack-node)");
     repoConfig = { token, repo };
     localStorage.setItem("gh_config", JSON.stringify(repoConfig));
     modal.classList.add("hidden");
@@ -42,11 +41,11 @@
 
   async function loadFiles() {
     if (!repoConfig || !repoConfig.repo) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">[ 未配置目标仓库，请先 sudo_login 并输入 owner/repo ]</div>';
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">[ 请先登录管理员以加载数据 ]</div>';
       return;
     }
     
-    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">[ 正在拉取数据... ]</div>';
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">[ 正在加载文件列表... ]</div>';
     try {
       const res = await fetch(`https://api.github.com/repos/${repoConfig.repo}/releases`);
       const releases = await res.json();
@@ -66,29 +65,29 @@
             <div>
               <span class="name">${escapeHtml(asset.name)}</span>
               <span class="tag">${escapeHtml(rel.tag_name)}</span>
-              ${rel.body ? `<div class="desc">> ${escapeHtml(rel.body)}</div>` : ''}
+              ${rel.body ? `<div class="desc">> 备注: ${escapeHtml(rel.body)}</div>` : ''}
             </div>
             <span>${(asset.size / 1024 / 1024).toFixed(1)} MB</span>
             <div>
-              <a href="${asset.browser_download_url}" class="btn">GET</a>
-              ${repoConfig.token ? `<button class="btn danger btn-del" data-id="${rel.id}">DEL</button>` : ''}
+              <a href="${asset.browser_download_url}" class="btn">[ 下载 ]</a>
+              ${repoConfig.token ? `<button class="btn danger btn-del" data-id="${rel.id}">[ 删除 ]</button>` : ''}
             </div>
           `;
           list.appendChild(el);
         }
       }
 
-      if (count === 0) list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">[ NULL ] 无数据</div>';
+      if (count === 0) list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">[ 暂无文件 ]</div>';
       bindDeleteBtns();
     } catch (e) {
-      list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--danger)">[ ERR ] 拉取失败，检查仓库名是否正确 (${e.message})</div>`;
+      list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--danger)">[ 加载失败 ] 请检查仓库名和密钥是否正确</div>`;
     }
   }
 
   function bindDeleteBtns() {
     document.querySelectorAll(".btn-del").forEach(btn => {
       btn.onclick = async () => {
-        if (!confirm("[!] 警告: 确认彻底删除该 Release？不可逆操作。")) return;
+        if (!confirm("[警告] 确定要永久删除这个文件吗？删除后无法恢复！")) return;
         const id = btn.dataset.id;
         await fetch(`https://api.github.com/repos/${repoConfig.repo}/releases/${id}`, {
           method: "DELETE",
@@ -107,16 +106,16 @@
   drop.addEventListener("drop", ev => addFiles(Array.from(ev.dataTransfer.files)));
 
   function addFiles(files) {
-    if (!repoConfig || !repoConfig.token) return alert("[!] 请先登录");
+    if (!repoConfig || !repoConfig.token) return alert("[!] 请先登录管理员");
     for (const f of files) {
-      if (f.size > 2 * 1024 * 1024 * 1024) { alert(`[!] 超出 GitHub 限制 (2GB): ${f.name}`); continue; }
+      if (f.size > 2 * 1024 * 1024 * 1024) { alert(`[错误] 文件 "${f.name}" 超出 2GB 限制`); continue; }
       
       const id = Math.random().toString(36).slice(2);
       const el = document.createElement("div");
       el.className = "q-item";
       el.id = "q-" + id;
       el.innerHTML = `
-        <div class="q-info"><span>${escapeHtml(f.name)}</span><span class="q-status">WAIT</span></div>
+        <div class="q-info"><span>${escapeHtml(f.name)}</span><span class="q-status">等待上传</span></div>
         <div class="q-bar">[          ] 0%</div>
       `;
       $("#queue").appendChild(el);
@@ -133,20 +132,20 @@
   }
 
   async function startUpload(id, file) {
-    const note = $("#note").value || "手动上传";
+    const note = $("#note").value || "无备注";
     const tag = "v" + Date.now();
     
     try {
-      updateBar(id, 5, "CREATE_RELEASE");
+      updateBar(id, 5, "创建记录中");
       const relRes = await fetch(`https://api.github.com/repos/${repoConfig.repo}/releases`, {
         method: "POST",
         headers: { "Authorization": `token ${repoConfig.token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ tag_name: tag, name: file.name, body: note })
       });
-      if (!relRes.ok) throw new Error("Release创建失败，检查 Token 权限 (需 repo 权限)");
+      if (!relRes.ok) throw new Error("权限不足，请检查 Token 是否勾选了 repo 权限");
       const rel = await relRes.json();
 
-      updateBar(id, 20, "UPLOADING");
+      updateBar(id, 20, "上传中");
       const uploadUrl = rel.upload_url.replace("{?name,label}", `?name=${encodeURIComponent(file.name)}`);
       
       const xhr = new XMLHttpRequest();
@@ -157,25 +156,25 @@
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const p = 20 + Math.floor((e.loaded / e.total) * 80);
-          updateBar(id, p, "UPLOADING");
+          updateBar(id, p, "上传中");
         }
       };
       
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          updateBar(id, 100, "✅ DONE");
+          updateBar(id, 100, "✅ 上传成功");
           setTimeout(() => document.getElementById("q-"+id).remove(), 2000);
           loadFiles();
         } else {
-          updateBar(id, 100, "❌ ERR");
-          alert("[!] 附件上传失败，可能是网络问题或超出 2GB 限制");
+          updateBar(id, 100, "❌ 失败");
+          alert("[错误] 附件上传失败，可能是网络问题或超出限制");
         }
       };
-      xhr.onerror = () => updateBar(id, 100, "❌ NET_ERR");
+      xhr.onerror = () => updateBar(id, 100, "❌ 网络错误");
       xhr.send(file);
 
     } catch (e) {
-      updateBar(id, 100, "❌ FAIL");
+      updateBar(id, 100, "❌ 失败");
       alert(e.message);
     }
   }
