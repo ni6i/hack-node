@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SYS://HACK_NODE</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="scanlines"></div>
+
+<header>
+  <div class="ascii-logo">
+ _   _            _              _   _           _      
+| | | | __ _  ___| | _____ _ __ | \ | | ___   __| | ___ 
+| |_| |/ _` |/ __| |/ / _ \ '__||  \| |/ _ \ / _` |/ _ \
+|  _  | (_| | (__|   <  __/ |   | |\  | (_) | (_| |  __/
+|_| |_|\__,_|\___|_|\_\___|_|   |_| \_|\___/ \__,_|\___|
+  </div>
+  <div class="status-bar">
+    <span>SYS: <span class="blink">ONLINE</span></span>
+    <span>AUTH: <span id="auth-level" class="text-red">GUEST</span></span>
+    <button id="btn-login" class="btn ghost">[ sudo_login ]</button>
+    <button id="btn-logout" class="btn ghost hidden">[ logout ]</button>
+  </div>
+</header>
+
+<main>
+  <!-- 上传终端（仅登录可见） -->
+  <section id="upload-section" class="terminal-box hidden">
+    <div class="terminal-header">root@github:~/upload</div>
+    <div class="terminal-body">
+      <div id="drop" class="drop-area">
+        <input id="file" type="file" hidden>
+        <p class="prompt">root@github:~# <span class="input-cursor">_</span></p>
+        <p class="hint blink">[ 拖拽数据包至此 或 点击挂载文件 ]</p>
+      </div>
+      
+      <div class="input-group">
+        <label>root@github:~# mount --desc=</label>
+        <input id="note" class="term-input" type="text" placeholder="注入描述信息" maxlength="100">
+      </div>
+
+      <div id="queue" class="queue"></div>
+    </div>
+  </section>
+
+  <!-- 文件列表终端 -->
+  <section class="terminal-box">
+    <div class="terminal-header">root@github:~/data_node/dump</div>
+    <div class="terminal-body">
+      <div class="toolbar">
+        <span class="prompt">root@github:~# grep </span>
+        <input id="q" class="term-input inline" type="text" placeholder="'keyword' (回车执行)">
+        <button id="btn-refresh" class="btn">[ REFRESH ]</button>
+      </div>
+      
+      <div class="list-header">
+        <span class="col-name">文件名 [TAG]</span>
+        <span class="col-size">大小</span>
+        <span class="col-act">操作</span>
+      </div>
+      <div id="list" class="file-list">
+        <div style="padding:20px;text-align:center;color:var(--text-dim)">[ 正在拉取数据... ]</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 登录弹窗 -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <div class="terminal-header">AUTH_REQUIRED</div>
+    <div class="terminal-body">
+      <p class="prompt text-red">[!] 请求提权：请输入 GitHub Token</p>
+      <input id="token-input" type="password" class="term-input" placeholder="ghp_xxxxxxxxxxxx" style="margin-bottom:10px;">
+      <input id="repo-input" type="text" class="term-input" placeholder="Owner/Repo (如: admin/hack-node)">
+      <div class="modal-actions">
+        <button id="btn-cancel" class="btn">[ ABORT ]</button>
+        <button id="btn-submit" class="btn primary">[ EXECUTE ]</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+        </html>
