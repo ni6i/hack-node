@@ -3,65 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>SYS://HACK_NODE</title>
+<title>腾哥的专属软件分发站</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="scanlines"></div>
 
+<!-- 最显眼的横幅 -->
+<div class="banner">腾哥NB666</div>
+
 <header>
-  <div class="ascii-logo">
- _   _            _              _   _           _      
-| | | | __ _  ___| | _____ _ __ | \ | | ___   __| | ___ 
-| |_| |/ _` |/ __| |/ / _ \ '__||  \| |/ _ \ / _` |/ _ \
-|  _  | (_| | (__|   <  __/ |   | |\  | (_) | (_| |  __/
-|_| |_|\__,_|\___|_|\_\___|_|   |_| \_|\___/ \__,_|\___|
-  </div>
   <div class="status-bar">
-    <span>SYS: <span class="blink">ONLINE</span></span>
-    <span>AUTH: <span id="auth-level" class="text-red">GUEST</span></span>
-    <button id="btn-login" class="btn ghost">[ sudo_login ]</button>
-    <button id="btn-logout" class="btn ghost hidden">[ logout ]</button>
+    <span>状态: <span class="blink">在线</span></span>
+    <span>权限: <span id="auth-level" class="text-red">访客</span></span>
+    <button id="btn-login" class="btn ghost">[ 管理员登录 ]</button>
+    <button id="btn-logout" class="btn ghost hidden">[ 退出登录 ]</button>
   </div>
 </header>
 
 <main>
-  <!-- 上传终端（仅登录可见） -->
+  <!-- 上传区域（仅登录可见） -->
   <section id="upload-section" class="terminal-box hidden">
-    <div class="terminal-header">root@github:~/upload</div>
+    <div class="terminal-header">数据上传终端</div>
     <div class="terminal-body">
       <div id="drop" class="drop-area">
         <input id="file" type="file" hidden>
-        <p class="prompt">root@github:~# <span class="input-cursor">_</span></p>
-        <p class="hint blink">[ 拖拽数据包至此 或 点击挂载文件 ]</p>
+        <p class="hint blink">[ 点击这里选择文件，或将文件拖入此处 ]</p>
       </div>
       
       <div class="input-group">
-        <label>root@github:~# mount --desc=</label>
-        <input id="note" class="term-input" type="text" placeholder="注入描述信息" maxlength="100">
+        <label>文件备注（可选）：</label>
+        <input id="note" class="term-input" type="text" placeholder="请输入版本描述...">
       </div>
 
       <div id="queue" class="queue"></div>
     </div>
   </section>
 
-  <!-- 文件列表终端 -->
+  <!-- 文件列表区域 -->
   <section class="terminal-box">
-    <div class="terminal-header">root@github:~/data_node/dump</div>
+    <div class="terminal-header">已分享的文件列表</div>
     <div class="terminal-body">
       <div class="toolbar">
-        <span class="prompt">root@github:~# grep </span>
-        <input id="q" class="term-input inline" type="text" placeholder="'keyword' (回车执行)">
-        <button id="btn-refresh" class="btn">[ REFRESH ]</button>
+        <span class="prompt">搜索文件名：</span>
+        <input id="q" class="term-input inline" type="text" placeholder="输入关键字并回车">
+        <button id="btn-refresh" class="btn">[ 刷新列表 ]</button>
       </div>
       
       <div class="list-header">
-        <span class="col-name">文件名 [TAG]</span>
+        <span class="col-name">文件名 [标签]</span>
         <span class="col-size">大小</span>
         <span class="col-act">操作</span>
       </div>
       <div id="list" class="file-list">
-        <div style="padding:20px;text-align:center;color:var(--text-dim)">[ 正在拉取数据... ]</div>
+        <div style="padding:20px;text-align:center;color:var(--text-dim)">[ 正在获取数据... ]</div>
       </div>
     </div>
   </section>
@@ -70,14 +65,14 @@
 <!-- 登录弹窗 -->
 <div id="modal" class="modal hidden">
   <div class="modal-content">
-    <div class="terminal-header">AUTH_REQUIRED</div>
+    <div class="terminal-header">管理员身份验证</div>
     <div class="terminal-body">
-      <p class="prompt text-red">[!] 请求提权：请输入 GitHub Token</p>
-      <input id="token-input" type="password" class="term-input" placeholder="ghp_xxxxxxxxxxxx" style="margin-bottom:10px;">
-      <input id="repo-input" type="text" class="term-input" placeholder="Owner/Repo (如: admin/hack-node)">
+      <p class="prompt text-red">[!] 请输入密钥 (GitHub Token)</p>
+      <input id="token-input" type="password" class="term-input" placeholder="ghp_..." style="margin-bottom:10px;">
+      <input id="repo-input" type="text" class="term-input" placeholder="仓库名 (如: ni6i/hack-node)">
       <div class="modal-actions">
-        <button id="btn-cancel" class="btn">[ ABORT ]</button>
-        <button id="btn-submit" class="btn primary">[ EXECUTE ]</button>
+        <button id="btn-cancel" class="btn">[ 取消 ]</button>
+        <button id="btn-submit" class="btn primary">[ 确认登录 ]</button>
       </div>
     </div>
   </div>
@@ -85,4 +80,4 @@
 
 <script src="app.js"></script>
 </body>
-        </html>
+</html>
